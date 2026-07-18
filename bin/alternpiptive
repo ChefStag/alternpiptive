@@ -1,0 +1,40 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+# Alternpiptive v0.1
+# The Safe Gateway for Python Dependencies
+
+ACTION=$1
+PACKAGE=$2
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+case "$ACTION" in
+    install)
+        echo -e "${BOLD}Analyzing: $PACKAGE...${NC}"
+        
+        # 1. Check for native Termux package (The Gold Standard)
+        # We search specifically for the python-package naming convention
+        if pkg list-installed | grep -q "python-$PACKAGE"; then
+            echo -e "${GREEN}Already installed natively: python-$PACKAGE${NC}"
+        elif pkg search "python-$PACKAGE" > /dev/null 2>&1; then
+            echo -e "${GREEN}Found native package. Installing...${NC}"
+            pkg install -y "python-$PACKAGE"
+        
+        # 2. If not found, use a strict Virtual Environment
+        else
+            echo -e "${RED}No native match. Redirecting to isolated VENV...${NC}"
+            VENV_DIR="$HOME/.alternpiptive/venv"
+            [ ! -d "$VENV_DIR" ] && python3 -m venv "$VENV_DIR"
+            source "$VENV_DIR/bin/activate"
+            pip install "$PACKAGE"
+            echo -e "${GREEN}Package successfully isolated in VENV.${NC}"
+        fi
+        ;;
+    *)
+        echo "Usage: alternpiptive install <package>"
+        ;;
+esac
