@@ -1,0 +1,13 @@
+name: Build Binary Wheel
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Wheel
+        run: |
+          pip wheel --wheel-dir=dist/ --no-deps <PACKAGE_NAME>
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: dist/*.whl
