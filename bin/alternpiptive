@@ -3,23 +3,26 @@
 PACKAGE=$2
 VENV_DIR="$HOME/.alternpiptive/venv"
 
+# Check if a package name was provided
+if [ -z "$PACKAGE" ]; then
+    echo "Usage: pip install <package>"
+    exit 1
+fi
+
 echo -e "\033[1;36mAnalyzing: $PACKAGE...\033[0m"
 
-# 1. Attempt Native Install
-# We suppress output so the user doesn't see "E: Unable to locate" 
-# unless we absolutely have to.
+# Attempt native install silently
+# We capture the output to avoid showing the 'Unable to locate' error if it fails
 if pkg install -y "python-$PACKAGE" > /dev/null 2>&1; then
     echo -e "\033[0;32mNative install successful!\033[0m"
 else
-    # 2. If it failed, we MUST go to the VENV
-    echo -e "\033[0;33mNo native package found. Redirecting to VENV (Isolated)...\033[0m"
+    # Only if native fails, do we tell the user we are moving to the VENV
+    echo -e "\033[0;33mNo native package found. Routing to VENV (Isolated)...\033[0m"
     
-    # Ensure VENV exists
     [ ! -d "$VENV_DIR" ] && python3 -m venv "$VENV_DIR"
     
-    # Activate and install
-    source "$VENV_DIR/bin/activate"
-    pip install "$PACKAGE"
+    # Use the venv's pip directly
+    "$VENV_DIR/bin/pip" install "$PACKAGE"
     
     echo -e "\033[0;32mSuccessfully installed in isolated VENV!\033[0m"
 fi
