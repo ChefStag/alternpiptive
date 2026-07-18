@@ -3,31 +3,28 @@
 ACTION=$1
 PACKAGE=$2
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BOLD='\033[1m'
-NC='\033[0m'
+# A simple list of packages that have official Termux native versions
+# Add new ones here as you find them!
+NATIVE_PKGS=("numpy" "cryptography" "matplotlib")
 
-# Add this Mapping Table
-case "$PACKAGE" in
-    requests) PKG_NAME="python-requests" ;;
-    *) PKG_NAME="python-$PACKAGE" ;;
-esac
+is_native() {
+    for p in "${NATIVE_PKGS[@]}"; do
+        [[ "$1" == "$p" ]] && return 0
+    done
+    return 1
+}
 
 case "$ACTION" in
     install)
-        echo -e "${BOLD}Analyzing: $PACKAGE (Target: $PKG_NAME)...${NC}"
-        
-        # Check if the mapped package exists in the repo
-        if pkg search "$PKG_NAME" | grep -q "installed"; then
-            echo -e "${GREEN}Already installed natively: $PKG_NAME${NC}"
-        elif pkg search "$PKG_NAME" > /dev/null 2>&1; then
-            echo -e "${GREEN}Found native package. Installing...${NC}"
-            pkg install -y "$PKG_NAME"
+        if is_native "$PACKAGE"; then
+            echo -e "Installing native package: python-$PACKAGE"
+            pkg install -y "python-$PACKAGE"
         else
-            echo -e "${RED}Native package $PKG_NAME not found. Routing to VENV...${NC}"
-            # ... (rest of your venv logic)
+            echo -e "No native package found for '$PACKAGE'. Routing to VENV..."
+            VENV_DIR="$HOME/.alternpiptive/venv"
+            [ ! -d "$VENV_DIR" ] && python3 -m venv "$VENV_DIR"
+            source "$VENV_DIR/bin/activate"
+            pip install "$PACKAGE"
         fi
         ;;
 esac
